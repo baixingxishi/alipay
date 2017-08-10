@@ -65,7 +65,7 @@ module Alipay
 
       def self.alipay_trade_wap_pay(params, options = {})
         params = Utils.stringify_keys(params)
-        Alipay::Service.check_required_params(params, ALIPAY_TRADE_PAGE_PAY_REQUIRED_PARAMS)
+        Alipay::Service.check_required_params(params, ::Alipay::Pc::Service::ALIPAY_TRADE_PAGE_PAY_REQUIRED_PARAMS)
         key = options[:key] || Alipay.key
         sign_type = (options[:sign_type] || :rsa2).to_s.upcase
         params = {
