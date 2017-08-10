@@ -63,6 +63,32 @@ module Alipay
         Net::HTTP.post_form(URI(GATEWAY_URL), params)
       end
 
+      def self.alipay_trade_wap_pay(params, options = {})
+        params = Utils.stringify_keys(params)
+        Alipay::Service.check_required_params(params, ALIPAY_TRADE_PAGE_PAY_REQUIRED_PARAMS)
+        key = options[:key] || Alipay.key
+        sign_type = (options[:sign_type] || :rsa2).to_s.upcase
+        params = {
+            'method'         => 'alipay.trade.wap.pay',
+            'charset'        => 'utf-8',
+            'version'        => '1.0',
+            'timestamp'      => Time.now.utc.strftime('%Y-%m-%d %H:%M:%S').to_s,
+            'sign_type'      => sign_type,
+            'app_id'         => options[:app_id] || Alipay.pid
+        }.merge(params)
+        string = Alipay::App::Sign.params_to_sorted_string(params)
+        sign = case sign_type
+                 when 'RSA'
+                   ::Alipay::Sign::RSA.sign(key, string)
+                 when 'RSA2'
+                   ::Alipay::Sign::RSA2.sign(key, string)
+                 else
+                   raise ArgumentError, "invalid sign_type #{sign_type}, allow value: 'RSA', 'RSA2'"
+               end
+
+        Alipay::Pc::Sign.params_to_encoded_string params.merge('sign' => sign)
+      end
+
       def self.request_uri(params, options = {})
         uri = URI(GATEWAY_URL)
         uri.query = URI.encode_www_form(sign_params(params, options))
